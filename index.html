@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>StudioGrid Pro - Narzędzie Siatki, Konturu i Kadrowania</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -13,6 +13,7 @@
       font-family: 'Inter', sans-serif;
       background-color: #090d16;
       color: #f8fafc;
+      touch-action: manipulation;
     }
 
     /* Custom Scrollbar */
@@ -52,27 +53,42 @@
       color: #ffffff !important;
       box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
     }
+
+    /* Mobile Drawer Transitions */
+    .mobile-sidebar {
+      transition: transform 0.3s ease-in-out;
+    }
+
+    @media (max-width: 767px) {
+      .mobile-sidebar-hidden {
+        transform: translateY(100%);
+      }
+      .mobile-sidebar-visible {
+        transform: translateY(0);
+      }
+    }
   </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden bg-slate-950 text-slate-100 select-none">
 
-  <header class="h-16 border-b border-slate-800 bg-slate-900/90 backdrop-blur px-4 flex items-center justify-between z-20 shrink-0">
+  <!-- TOP BAR -->
+  <header class="h-14 lg:h-16 border-b border-slate-800 bg-slate-900/90 backdrop-blur px-3 lg:px-4 flex items-center justify-between z-30 shrink-0">
     <!-- Brand Title -->
-    <div class="flex items-center space-x-3">
-      <div class="bg-indigo-600 text-white w-9 h-9 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/30">
-        <i class="fa-solid fa-layer-group text-lg"></i>
+    <div class="flex items-center space-x-2 lg:space-x-3">
+      <div class="bg-indigo-600 text-white w-8 h-8 lg:w-9 lg:h-9 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/30 shrink-0">
+        <i class="fa-solid fa-layer-group text-sm lg:text-lg"></i>
       </div>
       <div>
-        <h1 class="font-bold text-base tracking-wide leading-tight flex items-center gap-2">
-          StudioGrid Pro
-          <span class="text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-1.5 py-0.5 rounded font-mono">v2.0</span>
+        <h1 class="font-bold text-sm lg:text-base tracking-wide leading-tight flex items-center gap-1.5">
+          StudioGrid <span class="hidden sm:inline">Pro</span>
+          <span class="text-[9px] lg:text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-1 py-0.2 rounded font-mono">v2.0</span>
         </h1>
-        <p class="text-xs text-slate-400">Analiza kompozycji, kadrowanie i kontury referencyjne</p>
+        <p class="text-[10px] lg:text-xs text-slate-400 hidden md:block">Analiza kompozycji, kadrowanie i kontury referencyjne</p>
       </div>
     </div>
 
-    <!-- Mode Selector Tabs -->
-    <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 shadow-inner">
+    <!-- Mode Selector Tabs (Desktop/Tablet) -->
+    <div class="hidden md:flex bg-slate-950 p-1 rounded-xl border border-slate-800 shadow-inner">
       <button id="modeStandardBtn" class="tab-active px-3.5 py-1.5 text-xs font-medium rounded-lg transition flex items-center gap-2 text-slate-400">
         <i class="fa-solid fa-border-all"></i>
         <span>1. Siatka Standardowa</span>
@@ -88,26 +104,56 @@
     </div>
 
     <!-- Action Buttons -->
-    <div class="flex items-center gap-2">
-      <label for="imageLoader" class="cursor-pointer px-3.5 py-2 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition flex items-center gap-2">
+    <div class="flex items-center gap-1.5 lg:gap-2">
+      <label for="imageLoader" class="cursor-pointer px-2.5 lg:px-3.5 py-1.5 lg:py-2 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition flex items-center gap-1.5">
         <i class="fa-solid fa-folder-open text-indigo-400"></i>
         <span class="hidden sm:inline">Wczytaj obraz</span>
       </label>
       <input type="file" id="imageLoader" accept="image/*" class="hidden">
 
-      <button id="downloadBtn" disabled class="px-4 py-2 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white shadow-lg shadow-indigo-600/20 transition flex items-center gap-2">
+      <button id="downloadBtn" disabled class="px-3 lg:px-4 py-1.5 lg:py-2 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white shadow-lg shadow-indigo-600/20 transition flex items-center gap-1.5">
         <i class="fa-solid fa-download"></i>
-        <span>Eksportuj Obraz</span>
+        <span class="hidden sm:inline">Eksportuj Obraz</span>
+      </button>
+
+      <!-- Toggle Controls Button (Mobile Only) -->
+      <button id="toggleMobileSidebarBtn" class="md:hidden p-2 text-xs font-medium rounded-lg bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-600/30 transition flex items-center justify-center">
+        <i class="fa-solid fa-sliders text-sm"></i>
       </button>
     </div>
   </header>
 
+  <!-- MOBILE MODE SWITCHER BAR (Visible under header on small screens) -->
+  <div class="md:hidden bg-slate-900 border-b border-slate-800 p-1.5 flex justify-between gap-1 z-20 shrink-0">
+    <button id="mobileModeStandardBtn" class="tab-active flex-1 py-1.5 text-[11px] font-medium rounded-lg transition flex items-center justify-center gap-1 text-slate-400">
+      <i class="fa-solid fa-border-all"></i>
+      <span>Siatka</span>
+    </button>
+    <button id="mobileModeSubdivisionBtn" class="flex-1 py-1.5 text-[11px] font-medium rounded-lg transition flex items-center justify-center gap-1 text-slate-400">
+      <i class="fa-solid fa-draw-polygon"></i>
+      <span>Obrys</span>
+    </button>
+    <button id="mobileModeCropBtn" class="flex-1 py-1.5 text-[11px] font-medium rounded-lg transition flex items-center justify-center gap-1 text-slate-400">
+      <i class="fa-solid fa-crop-simple text-amber-400"></i>
+      <span>Kadr</span>
+    </button>
+  </div>
+
   <div class="flex flex-1 overflow-hidden relative">
 
-    <!-- LEFT SIDEBAR: TOOL 1 (Standard Grid Controls) -->
-    <aside id="sidebarStandard" class="w-80 border-r border-slate-800 bg-slate-900 flex flex-col shrink-0 overflow-y-auto">
-      <div class="p-4 space-y-6">
+    <!-- MOBILE OVERLAY BACKDROP -->
+    <div id="mobileBackdrop" class="fixed inset-0 bg-black/60 z-30 hidden md:hidden backdrop-blur-sm transition-opacity"></div>
 
+    <!-- LEFT SIDEBAR CONTAINER (Responsive Drawer on Mobile) -->
+    <div id="sidebarContainer" class="mobile-sidebar fixed md:relative bottom-0 left-0 right-0 md:right-auto z-40 md:z-10 w-full md:w-80 h-[70vh] md:h-full bg-slate-900 border-t md:border-t-0 md:border-r border-slate-800 flex flex-col shrink-0 overflow-hidden rounded-t-2xl md:rounded-none mobile-sidebar-hidden md:transform-none">
+      
+      <!-- Mobile Drawer Handle Bar -->
+      <div class="md:hidden w-full py-2 flex items-center justify-center border-b border-slate-800 cursor-pointer" id="closeMobileSidebarBtn">
+        <div class="w-12 h-1.5 bg-slate-700 rounded-full"></div>
+      </div>
+
+      <!-- LEFT SIDEBAR: TOOL 1 (Standard Grid Controls) -->
+      <aside id="sidebarStandard" class="flex-1 overflow-y-auto p-4 space-y-5">
         <!-- Grid Layout Presets -->
         <div class="space-y-3">
           <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center justify-between">
@@ -169,7 +215,7 @@
 
             <label class="flex items-center justify-between p-2 rounded-lg bg-slate-800/50 hover:bg-slate-800 cursor-pointer transition border border-slate-800">
               <span class="text-xs text-slate-300 flex items-center gap-2">
-                <i class="fa-solid fa-xmark text-slate-400"></i> Główny krzyż (X całego obrazu)
+                <i class="fa-solid fa-xmark text-slate-400"></i> Główny krzyż (X)
               </span>
               <input type="checkbox" id="showMainDiagonals" class="w-4 h-4 rounded text-indigo-600 bg-slate-700 border-slate-600 focus:ring-0">
             </label>
@@ -183,7 +229,7 @@
 
             <label class="flex items-center justify-between p-2 rounded-lg bg-slate-800/50 hover:bg-slate-800 cursor-pointer transition border border-slate-800">
               <span class="text-xs text-slate-300 flex items-center gap-2">
-                <i class="fa-solid fa-circle text-amber-400 text-[10px]"></i> Punkty skupienia (Mocne punkty)
+                <i class="fa-solid fa-circle text-amber-400 text-[10px]"></i> Punkty skupienia
               </span>
               <input type="checkbox" id="showPoints" checked class="w-4 h-4 rounded text-indigo-600 bg-slate-700 border-slate-600 focus:ring-0">
             </label>
@@ -193,7 +239,7 @@
         <hr class="border-slate-800">
 
         <!-- Styl linii -->
-        <div class="space-y-3">
+        <div class="space-y-3 pb-6 md:pb-0">
           <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center justify-between">
             <span>Styl i Wygląd Linii</span>
             <i class="fa-solid fa-sliders text-slate-500"></i>
@@ -241,14 +287,10 @@
             </select>
           </div>
         </div>
+      </aside>
 
-      </div>
-    </aside>
-
-    <!-- LEFT SIDEBAR: TOOL 2 (Contour & Recursive Subdivisions Controls) -->
-    <aside id="sidebarSubdivision" class="w-80 border-r border-slate-800 bg-slate-900 flex flex-col shrink-0 overflow-y-auto hidden">
-      <div class="p-4 space-y-6">
-
+      <!-- LEFT SIDEBAR: TOOL 2 (Contour & Recursive Subdivisions Controls) -->
+      <aside id="sidebarSubdivision" class="flex-1 overflow-y-auto p-4 space-y-5 hidden">
         <!-- Moduł Obrysu / Wektorowania Krawędzi -->
         <div class="space-y-3">
           <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center justify-between">
@@ -289,7 +331,6 @@
             <i class="fa-solid fa-network-wired text-slate-500"></i>
           </h2>
 
-          <!-- Toggle Main Axes -->
           <label class="flex items-center justify-between p-2 rounded-lg bg-slate-800/50 hover:bg-slate-800 cursor-pointer transition border border-slate-800">
             <span class="text-xs text-slate-300 flex items-center gap-2">
               <i class="fa-solid fa-table-cells-large text-indigo-400"></i> Główne osie (X / Y)
@@ -297,7 +338,6 @@
             <input type="checkbox" id="subShowMainAxes" checked class="w-4 h-4 rounded text-indigo-600 bg-slate-700 border-slate-600 focus:ring-0">
           </label>
 
-          <!-- Toggle Diagonals -->
           <label class="flex items-center justify-between p-2 rounded-lg bg-slate-800/50 hover:bg-slate-800 cursor-pointer transition border border-slate-800">
             <span class="text-xs text-slate-300 flex items-center gap-2">
               <i class="fa-solid fa-xmark text-indigo-400"></i> Przekątne (Krzyże)
@@ -305,21 +345,20 @@
             <input type="checkbox" id="subShowDiagonals" checked class="w-4 h-4 rounded text-indigo-600 bg-slate-700 border-slate-600 focus:ring-0">
           </label>
 
-          <!-- Recursive Subdivision Levels -->
           <div class="space-y-1.5">
             <label class="text-xs text-slate-300 flex justify-between">
-              <span>Głębokość podziału małych kwadratów:</span>
+              <span>Głębokość podziału:</span>
               <span id="subLevelVal" class="font-mono text-indigo-400">Poziom 2 (4x4)</span>
             </label>
             <input type="range" id="subLevel" min="1" max="4" value="2" step="1" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500">
-            <p class="text-[11px] text-slate-400">Dzieli każdy kwadrat siatki rekurencyjnie na mniejsze przekątne i osie pomocnicze.</p>
+            <p class="text-[11px] text-slate-400">Dzieli każdy kwadrat siatki rekurencyjnie na mniejsze przekątne i osie.</p>
           </div>
         </div>
 
         <hr class="border-slate-800">
 
         <!-- Moduł Podglądu Tła -->
-        <div class="space-y-3">
+        <div class="space-y-3 pb-6 md:pb-0">
           <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center justify-between">
             <span>Podgląd i Widoczność Tła</span>
             <i class="fa-solid fa-image text-slate-500"></i>
@@ -348,24 +387,20 @@
             </div>
           </div>
         </div>
+      </aside>
 
-      </div>
-    </aside>
-
-    <!-- LEFT SIDEBAR: TOOL 3 (Crop & Rotate Controls) -->
-    <aside id="sidebarCrop" class="w-80 border-r border-slate-800 bg-slate-900 flex flex-col shrink-0 overflow-y-auto hidden">
-      <div class="p-4 space-y-6">
-
+      <!-- LEFT SIDEBAR: TOOL 3 (Crop & Rotate Controls) -->
+      <aside id="sidebarCrop" class="flex-1 overflow-y-auto p-4 space-y-5 hidden">
         <!-- Aspect Ratio Selection -->
         <div class="space-y-3">
           <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center justify-between">
-            <span>Proporcje Kadru (Aspect Ratio)</span>
+            <span>Proporcje Kadru</span>
             <i class="fa-solid fa-vector-square text-amber-400"></i>
           </h2>
 
           <div class="grid grid-cols-2 gap-2">
             <button class="crop-ratio-btn px-2.5 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 text-white border border-indigo-500 transition text-center" data-ratio="free">
-              Dowolny (Free)
+              Dowolny
             </button>
             <button class="crop-ratio-btn px-2.5 py-1.5 text-xs font-medium rounded-lg bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-750 transition text-center" data-ratio="1:1">
               1:1 (Kwadrat)
@@ -397,7 +432,7 @@
           <div class="grid grid-cols-2 gap-2">
             <button id="rotateCwBtn" class="px-3 py-2 text-xs font-medium rounded-lg bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition flex items-center justify-center gap-2">
               <i class="fa-solid fa-rotate-right text-indigo-400"></i>
-              <span>Obróć o 90°</span>
+              <span>Obróć 90°</span>
             </button>
             <button id="flipHBtn" class="px-3 py-2 text-xs font-medium rounded-lg bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition flex items-center justify-center gap-2">
               <i class="fa-solid fa-right-left text-indigo-400"></i>
@@ -434,7 +469,7 @@
         <hr class="border-slate-800">
 
         <!-- Apply / Reset Actions -->
-        <div class="space-y-2 pt-2">
+        <div class="space-y-2 pt-1 pb-6 md:pb-0">
           <button id="applyCropBtn" class="w-full py-2.5 px-4 text-xs font-semibold rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-lg shadow-amber-500/20 transition flex items-center justify-center gap-2">
             <i class="fa-solid fa-check text-sm"></i>
             <span>Zastosuj Kadrowanie</span>
@@ -445,28 +480,28 @@
             <span>Przywróć Oryginał</span>
           </button>
         </div>
+      </aside>
 
-      </div>
-    </aside>
+    </div>
 
     <!-- RIGHT VIEWPORT CANVAS AREA -->
-    <main id="dropZone" class="flex-1 bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden select-none">
+    <main id="dropZone" class="flex-1 bg-slate-950 flex items-center justify-center p-2 sm:p-4 relative overflow-hidden select-none">
       
       <!-- Placeholder Screen -->
-      <div id="placeholder" class="flex flex-col items-center justify-center border-2 border-dashed border-slate-800 rounded-2xl p-12 max-w-md text-center transition-all">
-        <div class="w-16 h-16 bg-slate-900 rounded-full flex items-center justify-center text-indigo-400 mb-4 shadow-inner">
-          <i class="fa-solid fa-cloud-arrow-up text-2xl"></i>
+      <div id="placeholder" class="flex flex-col items-center justify-center border-2 border-dashed border-slate-800 rounded-2xl p-6 sm:p-12 max-w-sm sm:max-w-md text-center transition-all m-4">
+        <div class="w-12 h-12 sm:w-16 sm:h-16 bg-slate-900 rounded-full flex items-center justify-center text-indigo-400 mb-3 sm:mb-4 shadow-inner">
+          <i class="fa-solid fa-cloud-arrow-up text-xl sm:text-2xl"></i>
         </div>
-        <h3 class="text-base font-semibold text-slate-200 mb-1">Wgraj obraz referencyjny</h3>
-        <p class="text-xs text-slate-400 mb-4">Przeciągnij i upuść zdjęcie w dowolne miejsce na ekranie lub użyj przycisku wyboru pliku.</p>
-        <button onclick="document.getElementById('imageLoader').click()" class="px-5 py-2.5 text-xs font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30 transition">
+        <h3 class="text-sm sm:text-base font-semibold text-slate-200 mb-1">Wgraj obraz referencyjny</h3>
+        <p class="text-xs text-slate-400 mb-4">Przeciągnij plik tutaj lub użyj poniższego przycisku.</p>
+        <button onclick="document.getElementById('imageLoader').click()" class="px-4 sm:px-5 py-2 sm:py-2.5 text-xs font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30 transition">
           Wybierz plik z dysku
         </button>
       </div>
 
       <!-- Canvas Render Wrapper -->
       <div id="canvasWrapper" class="hidden relative max-w-full max-h-full flex items-center justify-center shadow-2xl rounded-lg overflow-hidden border border-slate-800">
-        <canvas id="mainCanvas" class="max-w-full max-h-[calc(100vh-6rem)] object-contain block"></canvas>
+        <canvas id="mainCanvas" class="max-w-full max-h-[calc(100vh-8rem)] md:max-h-[calc(100vh-6rem)] object-contain block"></canvas>
       </div>
 
     </main>
@@ -525,6 +560,16 @@
     const dropZone = document.getElementById('dropZone');
     const downloadBtn = document.getElementById('downloadBtn');
 
+    // Mobile UI Elements
+    const sidebarContainer = document.getElementById('sidebarContainer');
+    const mobileBackdrop = document.getElementById('mobileBackdrop');
+    const toggleMobileSidebarBtn = document.getElementById('toggleMobileSidebarBtn');
+    const closeMobileSidebarBtn = document.getElementById('closeMobileSidebarBtn');
+
+    const mobileModeStandardBtn = document.getElementById('mobileModeStandardBtn');
+    const mobileModeSubdivisionBtn = document.getElementById('mobileModeSubdivisionBtn');
+    const mobileModeCropBtn = document.getElementById('mobileModeCropBtn');
+
     // Mode Buttons & Sidebars
     const modeStandardBtn = document.getElementById('modeStandardBtn');
     const modeSubdivisionBtn = document.getElementById('modeSubdivisionBtn');
@@ -578,26 +623,53 @@
     const applyCropBtn = document.getElementById('applyCropBtn');
     const resetCropBtn = document.getElementById('resetCropBtn');
 
+    // Mobile Sidebar Drawer Logic
+    function openMobileSidebar() {
+      sidebarContainer.classList.remove('mobile-sidebar-hidden');
+      sidebarContainer.classList.add('mobile-sidebar-visible');
+      mobileBackdrop.classList.remove('hidden');
+    }
+
+    function closeMobileSidebar() {
+      sidebarContainer.classList.remove('mobile-sidebar-visible');
+      sidebarContainer.classList.add('mobile-sidebar-hidden');
+      mobileBackdrop.classList.add('hidden');
+    }
+
+    toggleMobileSidebarBtn.addEventListener('click', () => {
+      if (sidebarContainer.classList.contains('mobile-sidebar-visible')) {
+        closeMobileSidebar();
+      } else {
+        openMobileSidebar();
+      }
+    });
+
+    closeMobileSidebarBtn.addEventListener('click', closeMobileSidebar);
+    mobileBackdrop.addEventListener('click', closeMobileSidebar);
+
     // Mode Switching Logic
-    modeStandardBtn.addEventListener('click', () => switchMode('standard'));
-    modeSubdivisionBtn.addEventListener('click', () => switchMode('subdivision'));
-    modeCropBtn.addEventListener('click', () => switchMode('crop'));
+    [modeStandardBtn, mobileModeStandardBtn].forEach(b => b.addEventListener('click', () => switchMode('standard')));
+    [modeSubdivisionBtn, mobileModeSubdivisionBtn].forEach(b => b.addEventListener('click', () => switchMode('subdivision')));
+    [modeCropBtn, mobileModeCropBtn].forEach(b => b.addEventListener('click', () => switchMode('crop')));
 
     function switchMode(newMode) {
       state.mode = newMode;
       
-      [modeStandardBtn, modeSubdivisionBtn, modeCropBtn].forEach(b => b.classList.remove('tab-active'));
+      [modeStandardBtn, modeSubdivisionBtn, modeCropBtn, mobileModeStandardBtn, mobileModeSubdivisionBtn, mobileModeCropBtn].forEach(b => b.classList.remove('tab-active'));
       [sidebarStandard, sidebarSubdivision, sidebarCrop].forEach(s => s.classList.add('hidden'));
 
       if (newMode === 'standard') {
         modeStandardBtn.classList.add('tab-active');
+        mobileModeStandardBtn.classList.add('tab-active');
         sidebarStandard.classList.remove('hidden');
       } else if (newMode === 'subdivision') {
         modeSubdivisionBtn.classList.add('tab-active');
+        mobileModeSubdivisionBtn.classList.add('tab-active');
         sidebarSubdivision.classList.remove('hidden');
         if (state.image && !state.edgeCanvas) computeEdgeDetection();
       } else if (newMode === 'crop') {
         modeCropBtn.classList.add('tab-active');
+        mobileModeCropBtn.classList.add('tab-active');
         sidebarCrop.classList.remove('hidden');
         if (state.image && (state.cropBox.w === 0 || state.cropBox.h === 0)) {
           resetCropBoxToImage();
@@ -939,6 +1011,7 @@
         resetCropBoxToImage();
         if (state.mode === 'subdivision') computeEdgeDetection();
         switchMode('standard'); // Jump back to standard grid after crop
+        if (window.innerWidth < 768) closeMobileSidebar();
       };
       croppedImg.src = cropCanvas.toDataURL();
     });
@@ -952,24 +1025,27 @@
       render();
     });
 
-    // Mouse Interaction for Dragging Crop Handle
-    function getMousePosOnCanvas(e) {
+    // Mouse & Touch Interaction for Dragging Crop Handle
+    function getPointerPosOnCanvas(e) {
       const rect = canvas.getBoundingClientRect();
       const scaleX = canvas.width / rect.width;
       const scaleY = canvas.height / rect.height;
+
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
       return {
-        x: (e.clientX - rect.left) * scaleX,
-        y: (e.clientY - rect.top) * scaleY
+        x: (clientX - rect.left) * scaleX,
+        y: (clientY - rect.top) * scaleY
       };
     }
 
-    canvas.addEventListener('mousedown', (e) => {
+    function handlePointerStart(e) {
       if (state.mode !== 'crop' || !state.image) return;
-      const pos = getMousePosOnCanvas(e);
+      const pos = getPointerPosOnCanvas(e);
       const cb = state.cropBox;
-      const handleRadius = Math.max(12, canvas.width * 0.02);
+      const handleRadius = Math.max(16, canvas.width * 0.035); // Larger touch targets for mobile
 
-      // Check handle collisions
       const handles = getHandlePositions(cb);
       let hitHandle = null;
 
@@ -993,12 +1069,13 @@
         state.dragStartPos = pos;
         state.initialCropBox = { ...cb };
       }
-    });
+    }
 
-    window.addEventListener('mousemove', (e) => {
+    function handlePointerMove(e) {
       if (state.mode !== 'crop' || !state.isDraggingCrop) return;
+      if (e.cancelable) e.preventDefault();
 
-      const pos = getMousePosOnCanvas(e);
+      const pos = getPointerPosOnCanvas(e);
       const dx = pos.x - state.dragStartPos.x;
       const dy = pos.y - state.dragStartPos.y;
       const init = state.initialCropBox;
@@ -1040,12 +1117,21 @@
 
       state.cropBox = { x: newX, y: newY, w: newW, h: newH };
       render();
-    });
+    }
 
-    window.addEventListener('mouseup', () => {
+    function handlePointerEnd() {
       state.isDraggingCrop = false;
       state.activeHandle = null;
-    });
+    }
+
+    // Canvas Events (Mouse & Touch)
+    canvas.addEventListener('mousedown', handlePointerStart);
+    window.addEventListener('mousemove', handlePointerMove);
+    window.addEventListener('mouseup', handlePointerEnd);
+
+    canvas.addEventListener('touchstart', handlePointerStart, { passive: false });
+    window.addEventListener('touchmove', handlePointerMove, { passive: false });
+    window.addEventListener('touchend', handlePointerEnd);
 
     function getHandlePositions(cb) {
       return {
@@ -1067,7 +1153,6 @@
       const w = state.image.width;
       const h = state.image.height;
 
-      // Offscreen canvas for fast pixel processing
       const offCanvas = document.createElement('canvas');
       offCanvas.width = w;
       offCanvas.height = h;
@@ -1077,7 +1162,6 @@
       const imgData = offCtx.getImageData(0, 0, w, h);
       const data = imgData.data;
       
-      // Output edge map canvas
       const edgeCanvas = document.createElement('canvas');
       edgeCanvas.width = w;
       edgeCanvas.height = h;
@@ -1291,12 +1375,10 @@
 
     // Tool 3: Render Interactive Crop Tool Overlay
     function renderCropTool(w, h) {
-      // 1. Draw base image
       ctx.drawImage(state.image, 0, 0, w, h);
 
       const cb = state.cropBox;
 
-      // 2. Dark overlay mask outside crop area
       ctx.save();
       ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
       ctx.beginPath();
@@ -1304,7 +1386,6 @@
       ctx.rect(cb.x, cb.y, cb.w, cb.h);
       ctx.fill('evenodd');
 
-      // 3. Rule of Thirds guide lines inside crop box
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
       ctx.lineWidth = 1;
 
@@ -1323,14 +1404,12 @@
         ctx.stroke();
       }
 
-      // 4. Border Box
-      ctx.strokeStyle = '#f59e0b'; // Amber border
+      ctx.strokeStyle = '#f59e0b';
       ctx.lineWidth = 2;
       ctx.strokeRect(cb.x, cb.y, cb.w, cb.h);
 
-      // 5. Render Drag Handles (Corners & Edges)
       const handles = getHandlePositions(cb);
-      const handleRadius = Math.max(8, w * 0.012);
+      const handleRadius = Math.max(10, w * 0.015);
 
       ctx.fillStyle = '#f59e0b';
       ctx.strokeStyle = '#ffffff';
@@ -1360,7 +1439,7 @@
         link.click();
       } catch (e) {
         console.error('Download error:', e);
-        alert('Nie można pobrać pliku. Kliknij prawym przyciskiem myszy na obraz i wybierz "Zapisz obraz jako...".');
+        alert('Nie można pobrać pliku. Kliknij prawym przyciskiem myszy lub przytrzymaj palcem obraz i wybierz "Zapisz obraz".');
       }
     });
 
